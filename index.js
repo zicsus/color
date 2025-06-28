@@ -75,6 +75,54 @@ function parseOklchString(string) {
 	};
 }
 
+function parseRgbaString(string) {
+	const rgbaRegex = /^rgba?\(\s*([^)]+)\s*\)$/i;
+	const match = string.match(rgbaRegex);
+
+	if (!match) {
+		return null;
+	}
+
+	const parameters = match[1].split(/[,/\s]+/).filter(Boolean);
+
+	if (parameters.length < 3 || parameters.length > 4) {
+		return null;
+	}
+
+	const values = [];
+
+	// Parse RGB values (0-255 or percentage)
+	for (let i = 0; i < 3; i++) {
+		let value = Number.parseFloat(parameters[i]);
+		if (parameters[i].includes('%')) {
+			value = (value / 100) * 255;
+		}
+
+		// Round and clamp to 0-255
+		value = Math.round(Math.max(0, Math.min(255, value)));
+		values.push(value);
+	}
+
+	// Parse alpha (optional, 0-1 or percentage)
+	let alpha = 1;
+	if (parameters.length === 4) {
+		alpha = Number.parseFloat(parameters[3]);
+		if (parameters[3].includes('%')) {
+			alpha /= 100;
+		}
+
+		// Clamp alpha to 0-1
+		alpha = Math.max(0, Math.min(1, alpha));
+	}
+
+	values.push(alpha);
+
+	return {
+		model: 'rgb',
+		value: values,
+	};
+}
+
 const limiters = {};
 
 function Color(object, model) {
@@ -104,9 +152,13 @@ function Color(object, model) {
 	} else if (typeof object === 'string') {
 		let result = colorString.get(object);
 
-		// If colorString.get fails, try custom OKLCH parser
+		// If colorString.get fails, try custom parsers
 		if (result === null) {
 			result = parseOklchString(object);
+		}
+
+		if (result === null) {
+			result = parseRgbaString(object);
 		}
 
 		if (result === null) {

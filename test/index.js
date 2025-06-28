@@ -997,3 +997,21 @@ it('OKLCH string parsing', () => {
 		Color('oklch(invalid)'); // Invalid format
 	}, /Unable to parse color from string/);
 });
+
+it('High precision RGBA parsing', () => {
+	// Test high precision floating point RGBA values that color-string doesn't handle
+	const highPrecisionRgba = Color('rgba(254.99999999999997, 254.99999999999997, 254.99999999999997, 1)');
+	deepEqual(highPrecisionRgba.rgb().array(), [255, 255, 255]);
+
+	// Test fractional RGB values (should round)
+	const fractionalRgb = Color('rgba(255.7, 128.3, 64.9, 0.8)');
+	deepEqual(fractionalRgb.rgb().array(), [255, 128, 65, 0.8]);
+
+	// Test percentage RGB
+	const percentRgb = Color('rgba(100%, 50%, 25%, 80%)');
+	deepEqual(percentRgb.rgb().array(), [255, 127, 64, 0.8]);
+
+	// Test space-separated format
+	const spaceSeparated = Color('rgba(200.5 100.5 50.5 / 0.5)');
+	deepEqual(spaceSeparated.rgb().array(), [201, 101, 51, 0.5]);
+});
