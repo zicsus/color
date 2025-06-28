@@ -94,6 +94,7 @@ export interface ColorInstance {
 	xyz(...arguments_: number[]): ColorInstance;
 	lab(...arguments_: number[]): ColorInstance;
 	lch(...arguments_: number[]): ColorInstance;
+	oklch(...arguments_: number[]): ColorInstance;
 	ansi16(...arguments_: number[]): ColorInstance;
 	ansi256(...arguments_: number[]): ColorInstance;
 	hcg(...arguments_: number[]): ColorInstance;
@@ -119,6 +120,8 @@ export type ColorConstructor = {
 	lab(color: ColorLike): ColorInstance;
 	lch(...value: number[]): ColorInstance;
 	lch(color: ColorLike): ColorInstance;
+	oklch(...value: number[]): ColorInstance;
+	oklch(color: ColorLike): ColorInstance;
 	ansi16(...value: number[]): ColorInstance;
 	ansi16(color: ColorLike): ColorInstance;
 	ansi256(...value: number[]): ColorInstance;

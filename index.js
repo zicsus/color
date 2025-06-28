@@ -17,6 +17,64 @@ for (const model of Object.keys(convert)) {
 	hashedModelKeys[[...convert[model].labels].sort().join('')] = model;
 }
 
+function parseOklchString(string) {
+	const oklchRegex = /^oklch\(\s*([^)]+)\s*\)$/i;
+	const match = string.match(oklchRegex);
+
+	if (!match) {
+		return null;
+	}
+
+	const parameters = match[1].split(/[,/\s]+/).filter(Boolean);
+
+	if (parameters.length < 3 || parameters.length > 4) {
+		return null;
+	}
+
+	const values = [];
+
+	// Parse lightness (0-1 or percentage)
+	let lightness = Number.parseFloat(parameters[0]);
+	if (parameters[0].includes('%')) {
+		lightness /= 100;
+	}
+
+	// Convert to 0-100 scale for consistency with color-convert
+	values.push(lightness * 100);
+
+	// Parse chroma (0-1)
+	const chroma = Number.parseFloat(parameters[1]);
+	values.push(chroma);
+
+	// Parse hue (0-360 degrees)
+	const hue = Number.parseFloat(parameters[2]);
+	values.push(hue);
+
+	// Parse alpha (optional, 0-1 or percentage)
+	let alpha = 1;
+	if (parameters.length === 4) {
+		alpha = Number.parseFloat(parameters[3]);
+		if (parameters[3].includes('%')) {
+			alpha /= 100;
+		}
+	}
+
+	values.push(alpha);
+
+	// Validate ranges
+	if (values[0] < 0 || values[0] > 100 // Lightness 0-100%
+		|| values[1] < 0 || values[1] > 1 // Chroma 0-1
+		|| values[2] < 0 || values[2] > 360 // Hue 0-360°
+		|| values[3] < 0 || values[3] > 1) { // Alpha 0-1
+		return null;
+	}
+
+	return {
+		model: 'oklch',
+		value: values,
+	};
+}
+
 const limiters = {};
 
 function Color(object, model) {
@@ -44,7 +102,13 @@ function Color(object, model) {
 		this.color = [...object.color];
 		this.valpha = object.valpha;
 	} else if (typeof object === 'string') {
-		const result = colorString.get(object);
+		let result = colorString.get(object);
+
+		// If colorString.get fails, try custom OKLCH parser
+		if (result === null) {
+			result = parseOklchString(object);
+		}
+
 		if (result === null) {
 			throw new Error('Unable to parse color from string: ' + object);
 		}

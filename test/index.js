@@ -128,6 +128,25 @@ it('Colors to JSON', () => {
 		model: 'cmyk',
 		valpha: 1,
 	});
+	deepEqual(Color({
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+	}).oklch().toJSON(), {
+		color: [70, 0.15, 180],
+		model: 'oklch',
+		valpha: 1,
+	});
+	deepEqual(Color({
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+		alpha: 0.8,
+	}).oklch().toJSON(), {
+		color: [70, 0.15, 180],
+		model: 'oklch',
+		valpha: 0.8,
+	});
 });
 
 it('Color() argument', () => {
@@ -233,6 +252,26 @@ it('Color() argument', () => {
 		y: 25,
 		k: 10,
 	});
+	deepEqual(Color({
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+	}).oklch().object(), {
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+	});
+	deepEqual(Color({
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+		alpha: 0.8,
+	}).oklch().object(), {
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+		alpha: 0.8,
+	});
 });
 
 it('Setters', () => {
@@ -300,6 +339,48 @@ it('Setters', () => {
 		y: 10,
 		k: 10,
 	});
+	deepEqual(Color.oklch([70, 0.15, 180]).oklch().object(), {
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+	});
+	deepEqual(Color.oklch([70, 0.15, 180, 0.8]).oklch().object(), {
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+		alpha: 0.8,
+	});
+	deepEqual(Color.oklch(70, 0.15, 180).oklch().object(), {
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+	});
+	deepEqual(Color.oklch(70, 0.15, 180, 0.8).oklch().object(), {
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+		alpha: 0.8,
+	});
+	deepEqual(Color.oklch({
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+	}).oklch().object(), {
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+	});
+	deepEqual(Color.oklch({
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+		alpha: 0.8,
+	}).oklch().object(), {
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+		alpha: 0.8,
+	});
 });
 
 it('Retain Alpha', () => {
@@ -332,6 +413,11 @@ it('Translations', () => {
 		m: 0,
 		y: 17,
 		k: 88,
+	});
+	deepEqual(Color.rgb(10, 30, 25).oklch().round().object(), {
+		okl: 22,
+		okc: 3,
+		okh: 175,
 	});
 });
 
@@ -373,6 +459,17 @@ it('Array getters', () => {
 		y: 30,
 		k: 40,
 	}).cmyk().array(), [10, 20, 30, 40]);
+	deepEqual(Color({
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+	}).oklch().array(), [70, 0.15, 180]);
+	deepEqual(Color({
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+		alpha: 0.8,
+	}).oklch().array(), [70, 0.15, 180, 0.8]);
 });
 
 it('Multiple times', () => {
@@ -787,4 +884,116 @@ it('Should parse alphas in RGBA hex notation correctly', () => {
 		Color('#000000ab').alpha(),
 		Color('#000000aa').alpha(),
 	);
+});
+
+it('OKLCH color space support', () => {
+	// Test basic OKLCH construction
+	const oklchColor = Color.oklch(70, 0.15, 180);
+	deepEqual(oklchColor.oklch().object(), {
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+	});
+
+	// Test OKLCH with alpha
+	const oklchAlpha = Color.oklch(70, 0.15, 180, 0.8);
+	equal(oklchAlpha.alpha(), 0.8);
+	deepEqual(oklchAlpha.oklch().object(), {
+		okl: 70,
+		okc: 0.15,
+		okh: 180,
+		alpha: 0.8,
+	});
+
+	// Test OKLCH from object
+	const oklchFromObject = Color({okl: 50, okc: 0.1, okh: 120});
+	deepEqual(oklchFromObject.oklch().object(), {
+		okl: 50,
+		okc: 0.1,
+		okh: 120,
+	});
+
+	// Test OKLCH conversions to RGB
+	const oklchToRgb = Color.oklch(70, 0.15, 180).rgb().round();
+	ok(oklchToRgb.red() >= 0 && oklchToRgb.red() <= 255);
+	ok(oklchToRgb.green() >= 0 && oklchToRgb.green() <= 255);
+	ok(oklchToRgb.blue() >= 0 && oklchToRgb.blue() <= 255);
+
+	// Test RGB to OKLCH conversion
+	const rgbToOklch = Color.rgb(255, 0, 0).oklch();
+	ok(rgbToOklch.oklch().array()[0] > 0); // L should be positive
+	ok(rgbToOklch.oklch().array()[1] >= 0); // C should be non-negative
+	ok(rgbToOklch.oklch().array()[2] >= 0 && rgbToOklch.oklch().array()[2] <= 360); // H should be 0-360
+
+	// Test immutability
+	const original = Color.oklch(60, 0.1, 90);
+	const modified = Color.oklch(70, 0.2, 120);
+	notStrictEqual(original, modified);
+	equal(original.oklch().array()[0], 60);
+	equal(modified.oklch().array()[0], 70);
+
+	// Test array construction
+	const oklchFromArray = Color.oklch([60, 0.12, 45]);
+	deepEqual(oklchFromArray.oklch().array(), [60, 0.12, 45]);
+
+	// Test string representation
+	const oklchString = Color.oklch(70, 0.15, 180).oklch().string();
+	ok(typeof oklchString === 'string');
+});
+
+it('OKLCH string parsing', () => {
+	// Test OKLCH string parsing with percentage lightness
+	const oklchPercent = Color('oklch(70% 0.15 180)');
+	deepEqual(oklchPercent.oklch().array(), [70, 0.15, 180]);
+
+	// Test OKLCH string parsing with decimal lightness
+	const oklchDecimal = Color('oklch(0.7 0.15 180)');
+	deepEqual(oklchDecimal.oklch().array(), [70, 0.15, 180]);
+
+	// Test OKLCH string parsing with alpha using slash notation
+	const oklchAlpha = Color('oklch(70% 0.15 180 / 0.8)');
+	deepEqual(oklchAlpha.oklch().array(), [70, 0.15, 180, 0.8]);
+
+	// Test OKLCH string parsing with percentage alpha
+	const oklchAlphaPercent = Color('oklch(70% 0.15 180 / 80%)');
+	deepEqual(oklchAlphaPercent.oklch().array(), [70, 0.15, 180, 0.8]);
+
+	// Test OKLCH string parsing with spaces
+	const oklchSpaced = Color('oklch( 70% 0.15 180 )');
+	deepEqual(oklchSpaced.oklch().array(), [70, 0.15, 180]);
+
+	// Test OKLCH string parsing with commas
+	const oklchCommas = Color('oklch(70%, 0.15, 180)');
+	deepEqual(oklchCommas.oklch().array(), [70, 0.15, 180]);
+
+	// Test case insensitive
+	const oklchUpper = Color('OKLCH(70% 0.15 180)');
+	deepEqual(oklchUpper.oklch().array(), [70, 0.15, 180]);
+
+	// Test conversion to other formats works
+	const oklchToRgb = Color('oklch(70% 0.15 180)').rgb().round();
+	ok(oklchToRgb.red() >= 0 && oklchToRgb.red() <= 255);
+	ok(oklchToRgb.green() >= 0 && oklchToRgb.green() <= 255);
+	ok(oklchToRgb.blue() >= 0 && oklchToRgb.blue() <= 255);
+
+	// Test invalid OKLCH strings
+	throws(() => {
+		Color('oklch(150% 0.15 180)'); // Lightness > 100%
+	}, /Unable to parse color from string/);
+
+	throws(() => {
+		Color('oklch(70% 2.0 180)'); // Chroma > 1
+	}, /Unable to parse color from string/);
+
+	throws(() => {
+		Color('oklch(70% 0.15 400)'); // Hue > 360
+	}, /Unable to parse color from string/);
+
+	throws(() => {
+		Color('oklch(70% 0.15)'); // Missing hue
+	}, /Unable to parse color from string/);
+
+	throws(() => {
+		Color('oklch(invalid)'); // Invalid format
+	}, /Unable to parse color from string/);
 });

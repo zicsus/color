@@ -52,6 +52,12 @@ expectType<ColorInstance>(Color.lch(53, 105, 40));
 // Lab
 expectType<ColorInstance>(Color({l: 53, a: 80, b: 67}));
 expectType<ColorInstance>(Color.lab(53, 80, 67));
+// OKLCH
+expectType<ColorInstance>(Color({okl: 70, okc: 0.15, okh: 180}));
+expectType<ColorInstance>(Color.oklch(70, 0.15, 180));
+expectType<ColorInstance>(Color.oklch(70, 0.15, 180, 0.8));
+expectType<ColorInstance>(Color.oklch([70, 0.15, 180]));
+expectType<ColorInstance>(Color.oklch([70, 0.15, 180, 0.8]));
 // Hcg
 expectType<ColorInstance>(Color({h: 0, c: 100, g: 0}));
 expectType<ColorInstance>(Color.hcg(0, 100, 0));
@@ -68,6 +74,7 @@ expectType<ColorInstance>(Color.apple([65535, 65535, 65535]));
 // Getters
 const color = Color('#00ccff');
 expectType<ColorInstance>(color.hsl());
+expectType<ColorInstance>(color.oklch());
 expectType<ColorJson>(color.toJSON());
 expectType<ColorObject>(color.object());
 expectType<number[]>(color.rgb().array());
